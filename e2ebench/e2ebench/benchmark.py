@@ -234,20 +234,14 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         super().__init__(*args)
 
     def do_POST(self):
-        data = None
         try:
-            try:
-                data = self.rfile.read()
-                data = pickle.loads(data)
-            except pickle.PickleError:
-                self.send_error(400, message="Could not decode data")
-            try:
-                print(data)
-                self.benchmark.log(**data)
-                self.send_response(200)
-            except Exception:
-                self.send_error(500, message="Data recieved but server could not log it")
-                raise
+            length = int(self.headers['content-length'])
+            data = self.rfile.read(length)
+            data = pickle.loads(data)
+            self.benchmark.log(**data)
+            self.send_response(200)
+        except Exception:
+            self.send_error(500, message="Data recieved but server could not log it")
         finally:
             self.end_headers()
 
