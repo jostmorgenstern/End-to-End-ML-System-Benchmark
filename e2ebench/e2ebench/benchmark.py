@@ -236,16 +236,17 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         data = None
         try:
-            data = self.rfile.read()
-            data = pickle.loads(data)
-        except pickle.PickleError:
-            self.send_error(400, message="Could not decode data")
-        try:
-            print(data)
-            self.benchmark.log(**data)
-            self.send_response(200)
-        except sqlalchemy.exc.SQLAlchemyError:
-            self.send_error(500, message="Data recieved but server could not log it")
+            try:
+                data = self.rfile.read()
+                data = pickle.loads(data)
+            except pickle.PickleError:
+                self.send_error(400, message="Could not decode data")
+            try:
+                print(data)
+                self.benchmark.log(**data)
+                self.send_response(200)
+            except Exception:
+                self.send_error(500, message="Data recieved but server could not log it")
         finally:
             self.end_headers()
 
@@ -290,7 +291,6 @@ class DistributedBenchmarkWorker:
 
     def log(self, description, measure_type, value, unit=''):
         measurement = {
-            "measurement_datetime": datetime.now(),
             "measurement_description": description,
             "measurement_type": measure_type,
             "measurement_data": value,
