@@ -60,18 +60,13 @@ def train():
 
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
-        options = tf.data.Options()
-        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-
-        ds_train = tf.data.Dataset.from_tensor_slices((input_train, label_train)).with_options(options)
-        ds_val = tf.data.Dataset.from_tensor_slices((input_val, label_val))
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
-    history = model.fit(ds_train,
+    history = model.fit(input_train, label_train,
                         batch_size=batch_size,
                         epochs=num_epochs,
                         verbose=verbosity,
-                        validation_data=ds_val)
+                        validation_data=(input_val, label_val))
 
     # multiple run version
     # return {"model": model, "num_entries": len(input_train), "classifier": optimizer,
