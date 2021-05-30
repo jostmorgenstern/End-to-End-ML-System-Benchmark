@@ -14,6 +14,7 @@ class Measurement(Base):
     measurement_type = Column(String)
     measurement_data = Column(LargeBinary, nullable=False)
     measurement_unit = Column(String)
+    worker_number = Column(Integer)
 
 
 class BenchmarkMetadata(Base):

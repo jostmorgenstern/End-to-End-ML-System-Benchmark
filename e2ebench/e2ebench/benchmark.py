@@ -5,12 +5,17 @@ from queue import Queue
 from threading import Thread, Event
 from time import sleep
 from uuid import uuid4
+import json
 
 import pandas as pd
+import sqlalchemy.exc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from .datamodel import Base, Measurement, BenchmarkMetadata
+import requests as r
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+
 
 class Benchmark:
     """A class that manages the database entries for the measured metrics which are logged into the database.
@@ -122,8 +127,9 @@ class Benchmark:
                                   measurement_description=description,
                                   measurement_type=measure_type,
                                   measurement_data=value,
-                                  measurement_unit=unit)
+                                  measurement_unit=unit,)
         self.queue.put(measurement)
+
 
 class VisualizationBenchmark(Benchmark):
     def __init__(self, db_file):
@@ -189,3 +195,105 @@ class VisualizationBenchmark(Benchmark):
         joined_df = joined_df.merge(measurement_df, on='id')
 
         return joined_df.set_index('id')
+
+
+class DistributedBenchmark:
+    def __new__(cls, db_file, description="", mode="a"):
+        distributed_config = os.getenv("UMLAUT_CONFIG")
+        if not distributed_config:
+            return False
+        try:
+            config_dict = json.loads(distributed_config)
+        except json.JSONDecodeError:
+            raise ValueError(
+                "Could not parse UMLAUT_CONFIG environment variable. Maybe it's not a valid JSON object.")
+        config = config_dict
+        if "role" not in config:
+            raise KeyError("UMLAUT_CONFIG needs to contain key 'role'")
+        if config['role'] not in ['main', 'worker']:
+            raise ValueError("Key 'role' of UMLAUT_CONFIG needs to be either 'main' or 'worker'.")
+        if 'main_address' not in config:
+            raise KeyError("UMLAUT_CONFIG needs to contain key 'main_host'.")
+        if "main_port" not in config:
+            raise KeyError("UMLAUT_CONFIG needs to contain key 'main_port'.")
+        if config['role'] == 'worker':
+            if 'worker_number' not in config:
+                raise KeyError("UMLAUT_CONFIG needs to contain worker_number for workers.")
+        main_host = (config['main_address'], config['main_port'])
+
+        if config['role'] == 'main':
+            return DistributedBenchmarkMain(main_host, db_file, description, mode)
+        else:
+            return DistributedBenchmarkWorker(main_host, config['worker_number'])
+
+
+class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
+    def __init__(self, benchmark, *args):
+        super().__init__(*args)
+        self.benchmark = benchmark
+
+    def do_PUT(self):
+        data = None
+        try:
+            data = self.rfile.read()
+            data = pickle.loads(data)
+        except pickle.PickleError:
+            self.send_error(400, message="Could not decode data")
+        try:
+            self.benchmark.log(**data)
+        except sqlalchemy.exc.SQLAlchemyError:
+            self.send_error(500, message="Data recieved but server could not log it")
+        self.send_response(200)
+
+
+class DistributedBenchmarkMain(Benchmark):
+    def __init__(self, main_host, db_file, description="", mode="a"):
+        super().__init__(db_file, description, mode)
+
+        def handler(*args):
+            return DistributedLoggingRequestHandler(self, *args)
+
+        self._server = ThreadingHTTPServer(main_host, handler)
+        self._server_thread = Thread(target=self._server.serve_forever)
+        self._server_thread.daemon = True
+        self._server_thread.start()
+
+    def log(self, description, measure_type, value, unit='', worker_number=0):
+        measurement = Measurement(measurement_datetime=datetime.now(),
+                                  uuid=self.uuid,
+                                  measurement_description=description,
+                                  measurement_type=measure_type,
+                                  measurement_data=value,
+                                  measurement_unit=unit,
+                                  worker_number=worker_number)
+        self.queue.put(measurement)
+
+    def close(self):
+        super().close()
+        self._server.shutdown()
+        self._server.server_close()
+
+
+class DistributedBenchmarkWorker:
+    def __init__(self, main_host, worker_number):
+        self.main_host = main_host
+        self.worker_number = worker_number
+
+    def log(self, description, measure_type, value, unit=''):
+        measurement = {
+            "measurement_datetime": datetime.now(),
+            "measurement_description": description,
+            "measurement_type": measure_type,
+            "measurement_data": value,
+            "measurement_unit": unit,
+            "worker_number": self.worker_number
+        }
+        r.post(url=self.main_host, data=pickle.dumps(measurement))
+
+    def close(self):
+        pass
+
+    def query(self):
+        pass
+
+
