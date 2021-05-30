@@ -31,7 +31,7 @@ def compile_model(input_shape, num_classes, loss_function, optimizer):
         Dense(num_classes, activation='softmax'),
     ])
 
-    model.summary()
+    # model.summary()
 
     model.compile(loss=loss_function,
                   optimizer=optimizer,

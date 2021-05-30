@@ -241,6 +241,7 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         except pickle.PickleError:
             self.send_error(400, message="Could not decode data")
         try:
+            print(data)
             self.benchmark.log(**data)
         except sqlalchemy.exc.SQLAlchemyError:
             self.send_error(500, message="Data recieved but server could not log it")
@@ -283,6 +284,7 @@ class DistributedBenchmarkWorker:
     def __init__(self, main_host, worker_number):
         self.main_host = main_host
         self.worker_number = worker_number
+        print(f"UMLAUT: Started worker with number {self.worker_number}")
 
     def log(self, description, measure_type, value, unit=''):
         measurement = {
