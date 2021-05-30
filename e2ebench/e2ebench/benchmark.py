@@ -292,10 +292,10 @@ class DistributedBenchmarkWorker:
 
     def log(self, description, measure_type, value, unit=''):
         measurement = {
-            "measurement_description": description,
-            "measurement_type": measure_type,
-            "measurement_data": value,
-            "measurement_unit": unit,
+            "description": description,
+            "measure_type": measure_type,
+            "value": value,
+            "unit": unit,
             "worker_number": self.worker_number
         }
         r.post(url=self.url, data=pickle.dumps(measurement))
