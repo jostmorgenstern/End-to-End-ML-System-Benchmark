@@ -233,7 +233,7 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         super().__init__(*args)
         self.benchmark = benchmark
 
-    def do_PUT(self):
+    def do_POST(self):
         data = None
         try:
             data = self.rfile.read()
