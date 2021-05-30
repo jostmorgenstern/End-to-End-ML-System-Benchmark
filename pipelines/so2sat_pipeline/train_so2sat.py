@@ -58,15 +58,22 @@ def train():
     input_train = input_train.reshape((len(input_train), img_width, img_height, img_num_channels))
     input_val = input_val.reshape((len(input_val), img_width, img_height, img_num_channels))
 
+    options = tf.data.Options()
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+
+    ds_train = tf.data.Dataset.from_tensor_slices((input_train, label_train)).with_options(options)
+    ds_val = tf.data.Dataset.from_tensor_slices((input_val, label_val))
+
+
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
-    history = model.fit(input_train, label_train,
+    history = model.fit(ds_train,
                         batch_size=batch_size,
                         epochs=num_epochs,
                         verbose=verbosity,
-                        validation_data=(input_val, label_val))
+                        validation_data=ds_val)
 
     # multiple run version
     # return {"model": model, "num_entries": len(input_train), "classifier": optimizer,

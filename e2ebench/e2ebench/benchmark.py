@@ -230,8 +230,8 @@ class DistributedBenchmark:
 
 class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, benchmark, *args):
-        super().__init__(*args)
         self.benchmark = benchmark
+        super().__init__(*args)
 
     def do_POST(self):
         data = None
@@ -243,9 +243,11 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         try:
             print(data)
             self.benchmark.log(**data)
+            self.send_response(200)
         except sqlalchemy.exc.SQLAlchemyError:
             self.send_error(500, message="Data recieved but server could not log it")
-        self.send_response(200)
+        finally:
+            self.end_headers()
 
 
 class ThreadedTCPServer(socketserver.TCPServer, socketserver.ThreadingMixIn):
@@ -257,7 +259,7 @@ class DistributedBenchmarkMain(Benchmark):
         super().__init__(db_file, description, mode)
 
         def handler(*args):
-            return DistributedLoggingRequestHandler(self, *args)
+            return DistributedLoggingRequestHandler(benchmark=self, *args)
 
         self._server = ThreadedTCPServer(main_host, handler)
         self._server_thread = Thread(target=self._server.serve_forever)
