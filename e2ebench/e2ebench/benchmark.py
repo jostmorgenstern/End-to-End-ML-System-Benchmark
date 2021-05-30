@@ -282,7 +282,7 @@ class DistributedBenchmarkMain(Benchmark):
 
 class DistributedBenchmarkWorker:
     def __init__(self, main_host, worker_number):
-        self.main_host = main_host
+        self.url = f"http://{main_host[0]}:{main_host[1]}"
         self.worker_number = worker_number
         print(f"UMLAUT: Started worker with number {self.worker_number}")
 
