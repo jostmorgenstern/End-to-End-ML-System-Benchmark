@@ -259,7 +259,7 @@ class DistributedBenchmarkMain(Benchmark):
         super().__init__(db_file, description, mode)
 
         def handler(*args):
-            return DistributedLoggingRequestHandler(benchmark=self, *args)
+            return DistributedLoggingRequestHandler(self, *args)
 
         self._server = ThreadedTCPServer(main_host, handler)
         self._server_thread = Thread(target=self._server.serve_forever)
