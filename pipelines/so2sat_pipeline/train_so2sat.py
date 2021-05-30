@@ -47,11 +47,12 @@ def train():
     input_shape = (img_width, img_height, img_num_channels)
     loss_function = "categorical_crossentropy"
     num_classes = 17
-    num_epochs = 10
+    # num_epochs = 10
+    num_epochs = 3
     optimizer = Adam()
     verbosity = 1
 
-    n = 2048
+    n = 1024
     # n = 0
     input_train, label_train, input_val, label_val = load_data(n)
 

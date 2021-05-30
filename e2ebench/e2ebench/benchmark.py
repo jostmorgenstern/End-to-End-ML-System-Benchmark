@@ -247,6 +247,7 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
             except Exception:
                 self.send_error(500, message="Data recieved but server could not log it")
+                raise
         finally:
             self.end_headers()
 
