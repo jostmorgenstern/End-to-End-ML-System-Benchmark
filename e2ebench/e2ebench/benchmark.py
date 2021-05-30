@@ -295,7 +295,7 @@ class DistributedBenchmarkWorker:
             "measurement_unit": unit,
             "worker_number": self.worker_number
         }
-        r.post(url=self.main_host, data=pickle.dumps(measurement))
+        r.post(url=self.url, data=pickle.dumps(measurement))
 
     def close(self):
         pass
