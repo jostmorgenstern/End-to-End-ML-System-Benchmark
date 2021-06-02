@@ -3,9 +3,13 @@ from datetime import datetime
 import logging
 import os
 import pickle
-import psutil
 import threading
 import time
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import numpy as np
+import psutil
 import pyRAPL
 
 
@@ -134,14 +138,14 @@ class MemoryMetric(Metric):
         self.interval = interval
 
     def before(self):
+        self.process = psutil.Process(os.getpid())
         self.timestamps = []
         self.measurements = []
 
     def meanwhile(self, finish_event):
-        process = psutil.Process(os.getpid())
         while not finish_event.isSet():
             self.timestamps.append(datetime.now())
-            self.measurements.append(process.memory_info()[0] / (2 ** 20))
+            self.measurements.append(self.process.memory_info().rss / (2 ** 20))
             time.sleep(self.interval)
 
     def after(self):
@@ -151,9 +155,9 @@ class MemoryMetric(Metric):
         }
 
     def log(self, benchmark):
-        benchmark.log(self.description, self.measure_type, self.serialize(), unit="MB")
+        benchmark.log(self.description, self.measure_type, self.serialize(), unit="MiB")
 
-
+        
 class EnergyMetric(Metric):
     """The metric object to measure energy used in the execution
 
@@ -314,3 +318,41 @@ class ThroughputMetric(Metric):
 
     def log(self, benchmark):
         benchmark.log(self.description, self.measure_type, self.serialize(), unit='Entries/second')
+
+
+class CPUMetric(Metric):
+    """The metric object to measure CPU usage of the running Python instance in percent
+
+    Parameters
+    ----------
+    description: str
+        The description of this metric and function which is added to the database
+    interval: int, default=1
+        The number of seconds between CPU usage measurements
+    """
+    priority = 1
+    measure_type = 'cpu'
+    needs_threading = True
+
+    def __init__(self, description, interval=1):
+        super().__init__(description)
+        self.interval = interval
+
+    def before(self):
+        self.process = psutil.Process(os.getpid())
+        self.timestamps = []
+        self.measurements = []
+
+    def meanwhile(self, finish_event):
+        while not finish_event.isSet():
+            self.timestamps.append(datetime.now())
+            self.measurements.append(self.process.cpu_percent(interval=self.interval))
+
+    def after(self):
+        self.data = {
+            'timestamps': self.timestamps,
+            'measurements': self.measurements
+        }
+
+    def log(self, benchmark):
+        benchmark.log(self.description, self.measure_type, self.serialize(), unit="%")

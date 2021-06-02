@@ -8,12 +8,15 @@ from e2ebench import Benchmark,\
                      BenchmarkSupervisor,\
                      TimeMetric,\
                      MemoryMetric,\
-                     PowerMetric,\
-                     EnergyMetric,\
                      ThroughputMetric,\
                      LatencyMetric,\
                      TTATracker,\
-                     LossTracker
+                     LossTracker,\
+                     PowerMetric,\
+                     EnergyMetric
+                     LossTracker,\
+                     CPUMetric
+ 
 
 bm = Benchmark('sample_db_file.db', description="le description")
 
@@ -24,6 +27,7 @@ bloat_metrics = {
     "memory": MemoryMetric('bloat memory', interval=0.1),
     "power": PowerMetric('bloat power'),
     "energy": EnergyMetric('bloat energy'),
+    "cpu": CPUMetric('bloat cpu', interval=0.1)
 }
 
 
@@ -55,6 +59,8 @@ def main():
     TTATracker(bm).track(TTAs, "TTA values for training run 42 of sample pipeline")
 
     bm.close()
+
+    a = 0
 
 
 if __name__ == "__main__":
