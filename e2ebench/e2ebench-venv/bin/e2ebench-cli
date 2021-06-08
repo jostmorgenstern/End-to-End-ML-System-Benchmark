@@ -1,0 +1,12 @@
+#!/Users/christiancarljacob/PycharmProjects/DESEnd-to-end-ML-System-Benchmark/e2ebench/e2ebench-venv/bin/python3
+# EASY-INSTALL-ENTRY-SCRIPT: 'e2ebench','console_scripts','e2ebench-cli'
+__requires__ = 'e2ebench'
+import re
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+    sys.exit(
+        load_entry_point('e2ebench', 'console_scripts', 'e2ebench-cli')()
+    )
