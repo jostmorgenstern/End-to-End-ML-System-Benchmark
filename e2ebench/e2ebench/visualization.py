@@ -5,12 +5,12 @@ import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from matplotlib import cm
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
+
 
 class Visualizer:
     def __init__(self, df_from_cli, plotting_backend):
@@ -22,6 +22,7 @@ class Visualizer:
             return self.plot_with_matplotlib()
         if self.plotting_backend == 'plotly':
             return self.plot_with_plotly()
+
 
 class HyperparemeterVisualizer(Visualizer):
     def plot_with_plotly(self):
@@ -54,6 +55,7 @@ class HyperparemeterVisualizer(Visualizer):
 
         # return a list with no figures since the CLI expects a figure or a list of figures
         return []
+
 
 class ConfusionMatrixVisualizer(Visualizer):
     def plot_with_matplotlib(self):
@@ -92,6 +94,7 @@ class ConfusionMatrixVisualizer(Visualizer):
 
         return figs
 
+
 class TimebasedMultiLineChartVisualizer(Visualizer):
     """
     Expects a dataframe as created by the CLI.
@@ -122,7 +125,6 @@ class TimebasedMultiLineChartVisualizer(Visualizer):
             self.measurements_lists.append(measurement_dict.pop('measurements'))
             measurement_time = row['measurement_datetime'].strftime("%Y-%m-%d %H:%M:%S")
             self.linelabels.append("\"" + row['measurement_description'] + "\"\nfrom\n" + measurement_time)
-
 
     def _strfdelta(self, td):
         hours, remainder = divmod(td.total_seconds(), 3600)
@@ -178,6 +180,7 @@ class TimebasedMultiLineChartVisualizer(Visualizer):
         
         return [fig]
 
+
 class EpochbasedMultiLineChartVisualizer(Visualizer):
     """
     Like TimedeltaMultiLineChartVisualizer, but uses epoch-id on the xaxis instead of elapsed time.
@@ -226,6 +229,7 @@ class EpochbasedMultiLineChartVisualizer(Visualizer):
         
         return [fig]
 
+
 class BarVisualizer(Visualizer):
     def __init__(self, df_from_cli, plotting_backend):
         super().__init__(df_from_cli, plotting_backend)
@@ -271,61 +275,71 @@ class BarVisualizer(Visualizer):
         
         return [fig]
 
+
 class ThroughputVisualizer(BarVisualizer):
     title = "Metric: Throughput"
     xaxis_label = ""
     yaxis_label = "Throughput in entries/second"
+
 
 class LatencyVisualizer(BarVisualizer):
     title = "Metric: Latency"
     xaxis_label = ""
     yaxis_label = "Latencies in Seconds/entry"
 
+
 class PowerVisualizer(TimebasedMultiLineChartVisualizer):
     title = "Metric: Power"
     xaxis_label = "Time elapsed since start of pipeline run"
     yaxis_label = "Watt"
+
 
 class EnergyVisualizer(BarVisualizer):
     title = "Metric: Power"
     xaxis_label = "Time elapsed since start of pipeline run"
     yaxis_label = "Energy usage in µJ"
 
+
 class MemoryVisualizer(TimebasedMultiLineChartVisualizer):
     title = "Metric: Memory usage"
     xaxis_label = "Seconds elapsed since start of pipeline run"
     yaxis_label = "Memory usage in MB"
+
 
 class TimeVisualizer(BarVisualizer):
     title = "Metric: Time"
     xaxis_label = ""
     yaxis_label = "Time taken in seconds"
 
+
 class LossVisualizer(EpochbasedMultiLineChartVisualizer):
     title = "Metric: Loss over epochs"
     xaxis_label = "Epoch ID"
     yaxis_label = "Loss"
+
 
 class TTAVisualizer(EpochbasedMultiLineChartVisualizer):
     title = "Metric: Time-to-accuracy"
     xaxis_label = "Epoch ID"
     yaxis_label = "Accuracy"
 
+
 class CPUVisualizer(TimebasedMultiLineChartVisualizer):
     title = "Metric: CPU usage"
     xaxis_label = "Time elapsed since start of pipeline run"
     yaxis_label = "CPU usage in %"
 
+
 type_to_visualizer_class_mapper = {
-    "throughput" : ThroughputVisualizer,
-    "latency" : LatencyVisualizer,
-    "power" : PowerVisualizer,
-    "energy" : EnergyVisualizer,
-    "memory" : MemoryVisualizer,
-    "time" : TimeVisualizer,
-    "loss" : LossVisualizer,
-    "tta" : TTAVisualizer,
-    "confusion-matrix" : ConfusionMatrixVisualizer,
-    "hyperparameters" : HyperparemeterVisualizer,
+    "throughput": ThroughputVisualizer,
+    "latency": LatencyVisualizer,
+    "power": PowerVisualizer,
+    "energy": EnergyVisualizer,
+    "memory": MemoryVisualizer,
+    "time": TimeVisualizer,
+    "loss": LossVisualizer,
+    "tta": TTAVisualizer,
+    "confusion-matrix": ConfusionMatrixVisualizer,
+    "hyperparameters": HyperparemeterVisualizer,
     "cpu": CPUVisualizer
     }

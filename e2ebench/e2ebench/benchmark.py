@@ -185,7 +185,8 @@ class VisualizationBenchmark(Benchmark):
         measurement_query = self.query(Measurement.id,
                                        Measurement.measurement_datetime,
                                        Measurement.measurement_data,
-                                       Measurement.measurement_unit).filter(
+                                       Measurement.measurement_unit,
+                                       Measurement.worker_number).filter(
                                             Measurement.id.in_(uuid_type_desc_df.index))
         measure_col_names = [col_desc['name'] for col_desc in measurement_query.column_descriptions]
         measurement_df = pd.DataFrame(measurement_query.all(), columns=measure_col_names)
@@ -242,7 +243,7 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         try:
             self.benchmark.log(**data)
         except sqlalchemy.exc.SQLAlchemyError:
-            self.send_error(500, message="Data recieved but server could not log it")
+            self.send_error(500, message="Data received but server could not log it")
         self.send_response(200)
 
 

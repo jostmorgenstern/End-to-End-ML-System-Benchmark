@@ -1,0 +1,6 @@
+{
+  "role": "worker",
+  "main_address": "node-02.delab.i.hpi.de",
+  "main_port": 35353,
+  "worker_number": 2
+}

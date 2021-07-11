@@ -11,19 +11,13 @@ All metrics of the same measurement type are then visualized in a single diagram
 
 import argparse
 from itertools import chain
-import pickle
-import os
-import sys
-
-import pandas as pd
 import matplotlib.pyplot as plt
 from PyInquirer import prompt, Separator
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, asc
 
 from e2ebench import VisualizationBenchmark
-from e2ebench.datamodel import Measurement, BenchmarkMetadata
-from e2ebench.visualization import type_to_visualizer_class_mapper
+#from e2ebench.visualization import type_to_visualizer_class_mapper
+from e2ebench.distr_visualization import type_to_visualizer_class_mapper
+
 
 def get_args():
     file_help = "Sqlite Database file as created by an e2ebench.Benchmark object"
@@ -46,9 +40,10 @@ def get_args():
     parser.add_argument("-p", "--plotting-backend", choices=["matplotlib", "plotly"], default="matplotlib", help=plotting_backend_help)
     
     return parser.parse_args()
- 
+
+
 def filter_by_args(meas_df, meta_df, args):
-    if args.uuids is not  None:
+    if args.uuids is not None:
         meas_df = meas_df[meas_df['uuid'].isin(args.uuids)]
         meta_df = meta_df[meta_df.index.isin(args.uuids)]
     if args.types is not None:
@@ -60,6 +55,7 @@ def filter_by_args(meas_df, meta_df, args):
         raise Exception("There are no database entries with the given uuids, types and descriptions.")
 
     return meas_df, meta_df
+
 
 def prompt_for_uuid(meas_df, meta_df):
     prompt_choices = [
@@ -82,6 +78,7 @@ def prompt_for_uuid(meas_df, meta_df):
 
     return meas_df, meta_df
 
+
 def prompt_for_types(meas_df):
     prompt_choices = []
     for uuid, uuid_group in meas_df.groupby('uuid'):
@@ -103,6 +100,7 @@ def prompt_for_types(meas_df):
     
     return meas_df
 
+
 def prompt_for_description(meas_df):
     prompt_choices = []
     for (uuid, meas_type), u_t_group in meas_df.groupby(['uuid', 'measurement_type']):
@@ -123,6 +121,7 @@ def prompt_for_description(meas_df):
     meas_df = meas_df[meas_df.index.isin(idx)]
     
     return meas_df
+
 
 def main():
     args = get_args()

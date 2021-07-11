@@ -40,7 +40,16 @@ def compile_model(input_shape, num_classes, loss_function, optimizer):
     return model
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('train memory'), eb.TimeMetric('train time')], bm)
+throughput_tracker = eb.ThroughputMetric('train throughput')
+latency_tracker = eb.LatencyMetric('train latency')
+
+
+@eb.BenchmarkSupervisor([eb.MemoryMetric('train memory'),
+                         eb.TimeMetric('train time'),
+                         eb.CPUMetric('train cpu usage'),
+                         throughput_tracker,
+                         latency_tracker
+                         ], bm)
 def train():
     batch_size = 256
     img_width, img_height, img_num_channels = 32, 32, 8
@@ -51,7 +60,7 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    n = 2048
+    n = 4096
     # n = 0
     input_train, label_train, input_val, label_val = load_data(n)
 
@@ -59,6 +68,12 @@ def train():
     input_val = input_val.reshape((len(input_val), img_width, img_height, img_num_channels))
 
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
+    # strategy = tf.distribute.MirroredStrategy()
+
+    num_workers = strategy.num_replicas_in_sync
+
+    print(f"\n\n\nNUMBER OF WORKERS: {num_workers}\n\n\n")
+
     with strategy.scope():
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
@@ -68,10 +83,9 @@ def train():
                         verbose=verbosity,
                         validation_data=(input_val, label_val))
 
-    # multiple run version
-    # return {"model": model, "num_entries": len(input_train), "classifier": optimizer,
-    #         "accuracy": history.history["accuracy"][-1]}
+    throughput_tracker.track(n / num_workers)
+    latency_tracker.track(n / num_workers)
 
-    # single run version
+
     return {"model": model, "num_entries": len(input_train), "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
