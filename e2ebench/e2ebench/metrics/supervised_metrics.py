@@ -6,7 +6,7 @@ import pickle
 import threading
 import time
 import psutil
-import pyRAPL
+# import pyRAPL
 
 
 class BenchmarkSupervisor:
@@ -154,96 +154,96 @@ class MemoryMetric(Metric):
         benchmark.log(self.description, self.measure_type, self.serialize(), unit="MiB")
 
         
-class EnergyMetric(Metric):
-    """The metric object to measure energy used in the execution
+# class EnergyMetric(Metric):
+#     """The metric object to measure energy used in the execution
+#
+#     Parameters
+#     ----------
+#     description: str
+#         The description of this metric and function which is added to the database
+#     """
+#     priority = 1
+#     measure_type = 'energy'
+#     needs_threading = False
+#
+#     def before(self):
+#         try:
+#             pyRAPL.setup()
+#             self.meter = pyRAPL.Measurement('bar')
+#             self.meter.begin()
+#             self.successful = True
+#         except FileNotFoundError:
+#             logging.warning("RAPL file not found. Perhaps you are using a platform that does not support RAPL (for example Windows)")
+#             self.successful = False
+#         except PermissionError:
+#             logging.warning("PermissionError occured while reading RAPL file. Fix with \"sudo chmod -R a+r /sys/class/powercap/intel-rapl\"")
+#             self.successful = False
+#
+#     def after(self):
+#         if self.successful:
+#             self.meter.end()
+#             self.data = sum(self.meter.result.pkg)
+#
+#     def log(self, benchmark):
+#         if self.successful:
+#             benchmark.log(self.description, self.measure_type, self.serialize(), unit='µJ')
 
-    Parameters
-    ----------
-    description: str
-        The description of this metric and function which is added to the database
-    """
-    priority = 1
-    measure_type = 'energy'
-    needs_threading = False
 
-    def before(self):
-        try:
-            pyRAPL.setup()
-            self.meter = pyRAPL.Measurement('bar')
-            self.meter.begin()
-            self.successful = True
-        except FileNotFoundError:
-            logging.warning("RAPL file not found. Perhaps you are using a platform that does not support RAPL (for example Windows)")
-            self.successful = False
-        except PermissionError:
-            logging.warning("PermissionError occured while reading RAPL file. Fix with \"sudo chmod -R a+r /sys/class/powercap/intel-rapl\"")
-            self.successful = False
-
-    def after(self):
-        if self.successful:
-            self.meter.end()
-            self.data = sum(self.meter.result.pkg)
-
-    def log(self, benchmark):
-        if self.successful:
-            benchmark.log(self.description, self.measure_type, self.serialize(), unit='µJ')
-
-
-class PowerMetric(Metric):
-    """The metric object to measure power used in the execution
-
-    Parameters
-    ----------
-    description: str
-        The description of this metric and function which is added to the database
-    interval: int, default=1
-        The number of seconds between memory measurements
-    """
-    priority = 3
-    measure_type = 'power'
-    needs_threading = True
-
-    def __init__(self, description, interval=1):
-        super().__init__(description)
-        self.interval = interval
-        self.meter = None
-
-    def before(self):
-        try:
-            pyRAPL.setup()
-            self.meter = pyRAPL.Measurement('bar')
-            self.measurements = []
-            self.timestamps = []
-            self.meter.begin()
-            self.successful = True
-        except FileNotFoundError:
-            logging.debug("RAPL file not found. Perhaps you are using a platform that does not support RAPL (e.g. Windows)")
-            self.successful = False
-        except PermissionError:
-            logging.debug("PermissionError occured while reading RAPL file. Fix with \"sudo chmod -R a+r /sys/class/powercap/intel-rapl\"")
-            self.successful = False
-
-    def meanwhile(self, finish_event):
-        while not finish_event.isSet():
-            if self.successful:
-                self.meter.begin()
-                time.sleep(self.interval)
-                self.meter.end()
-                power = sum(map(lambda x: x / self.meter.result.duration, self.meter.result.pkg))
-                self.measurements.append(power)
-                self.timestamps.append(datetime.now())
-
-    def after(self):
-        if self.successful:
-            self.data = {
-                'timestamps' : self.timestamps,
-                'measurements' : self.measurements,
-                'interval' : self.interval
-            }
-
-    def log(self, benchmark):
-        if self.successful:
-            benchmark.log(self.description, self.measure_type, self.serialize(), unit='Watt')
+# class PowerMetric(Metric):
+#     """The metric object to measure power used in the execution
+#
+#     Parameters
+#     ----------
+#     description: str
+#         The description of this metric and function which is added to the database
+#     interval: int, default=1
+#         The number of seconds between memory measurements
+#     """
+#     priority = 3
+#     measure_type = 'power'
+#     needs_threading = True
+#
+#     def __init__(self, description, interval=1):
+#         super().__init__(description)
+#         self.interval = interval
+#         self.meter = None
+#
+#     def before(self):
+#         try:
+#             pyRAPL.setup()
+#             self.meter = pyRAPL.Measurement('bar')
+#             self.measurements = []
+#             self.timestamps = []
+#             self.meter.begin()
+#             self.successful = True
+#         except FileNotFoundError:
+#             logging.debug("RAPL file not found. Perhaps you are using a platform that does not support RAPL (e.g. Windows)")
+#             self.successful = False
+#         except PermissionError:
+#             logging.debug("PermissionError occured while reading RAPL file. Fix with \"sudo chmod -R a+r /sys/class/powercap/intel-rapl\"")
+#             self.successful = False
+#
+#     def meanwhile(self, finish_event):
+#         while not finish_event.isSet():
+#             if self.successful:
+#                 self.meter.begin()
+#                 time.sleep(self.interval)
+#                 self.meter.end()
+#                 power = sum(map(lambda x: x / self.meter.result.duration, self.meter.result.pkg))
+#                 self.measurements.append(power)
+#                 self.timestamps.append(datetime.now())
+#
+#     def after(self):
+#         if self.successful:
+#             self.data = {
+#                 'timestamps' : self.timestamps,
+#                 'measurements' : self.measurements,
+#                 'interval' : self.interval
+#             }
+#
+#     def log(self, benchmark):
+#         if self.successful:
+#             benchmark.log(self.description, self.measure_type, self.serialize(), unit='Watt')
 
 
 class LatencyMetric(Metric):
