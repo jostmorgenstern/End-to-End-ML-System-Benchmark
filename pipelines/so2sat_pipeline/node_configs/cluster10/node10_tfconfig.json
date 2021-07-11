@@ -1,6 +1,6 @@
 {
   "cluster": {
-    "worker": ['node-10.delab.i.hpi.de:25252']
+    "worker": ["node-10.delab.i.hpi.de:25252"]
   },
   "task": {
     "type": "worker",

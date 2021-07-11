@@ -39,9 +39,11 @@ python3 main.py"""
 
 
 def generate_tfconfig(node, index, nodes, folderpath):
+    workers = [f'"node-{node}.delab.i.hpi.de:25252"' for node in nodes]
+
     tfconfig = f"""{{
   "cluster": {{
-    "worker": {str([f"node-{node}.delab.i.hpi.de:25252" for node in nodes])}
+    "worker": [{", ".join(workers)}]
   }},
   "task": {{
     "type": "worker",
