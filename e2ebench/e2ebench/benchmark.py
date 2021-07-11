@@ -14,7 +14,8 @@ from sqlalchemy.orm import sessionmaker
 
 from .datamodel import Base, Measurement, BenchmarkMetadata
 import requests as r
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
+import socketserver
 
 
 class Benchmark:
@@ -247,6 +248,10 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
 
 
+class ThreadedTCPServer(socketserver.TCPServer, socketserver.ThreadingMixIn):
+    pass
+
+
 class DistributedBenchmarkMain(Benchmark):
     def __init__(self, main_host, db_file, description="", mode="a"):
         super().__init__(db_file, description, mode)
@@ -254,7 +259,7 @@ class DistributedBenchmarkMain(Benchmark):
         def handler(*args):
             return DistributedLoggingRequestHandler(self, *args)
 
-        self._server = ThreadingHTTPServer(main_host, handler)
+        self._server = ThreadedTCPServer(main_host, handler)
         self._server_thread = Thread(target=self._server.serve_forever)
         self._server_thread.daemon = True
         self._server_thread.start()
