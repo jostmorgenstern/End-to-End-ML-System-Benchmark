@@ -12,22 +12,24 @@ def load_data(num_samples=0):
     label_test = f['label'][0:n]
     f.close()
 
-    return input_test, label_test
+    return input_test, label_test, num_samples
+
+
+latency_metric = eb.LatencyMetric('test latency')
+throughput_metric = eb.ThroughputMetric('test throughput')
 
 
 @eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'),
                          eb.TimeMetric('test time'),
                          eb.CPUMetric('test cpu usage'),
-                         eb.LatencyMetric('test latency'),
-                         eb.ThroughputMetric('test throughput')
+                         latency_metric,
+                         throughput_metric
                          ], bm)
 def test(model):
 
-    # num_samples = 1024
-    num_samples = 0
     img_width, img_height, img_num_channels = 32, 32, 8
 
-    input_test, label_test = load_data(num_samples)
+    input_test, label_test, num_samples = load_data()
 
     input_test = input_test.reshape((len(input_test), img_width, img_height, img_num_channels))
 
@@ -47,5 +49,8 @@ def test(model):
                "heavy industry", "dense trees", "scattered tree",
                "brush, scrub", "low plants", "bare rock or paved",
                "bare soil or sand", "water"]
+
+    latency_metric.track(num_samples)
+    throughput_metric.track(num_samples)
 
     return {"confusion matrix": con_mat, "classes": classes}
