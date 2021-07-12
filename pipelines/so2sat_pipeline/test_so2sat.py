@@ -1,25 +1,33 @@
 import h5py
 from sklearn.metrics import confusion_matrix
 import numpy as np
-import os
-import sys
-import e2ebench
 from benchmarking import bm
 import e2ebench as eb
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'), eb.TimeMetric('test time')], bm)
-def test(model):
-    cmt = eb.ConfusionMatrixTracker(bm)
-
-    # n = 32768  # 2**15
-    n = 1024
-    img_width, img_height, img_num_channels = 32, 32, 8
-
+def load_data(num_samples=0):
     f = h5py.File('data/testing.h5', 'r')
+    n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
     input_test = f['sen1'][0:n]
     label_test = f['label'][0:n]
     f.close()
+
+    return input_test, label_test
+
+
+@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'),
+                         eb.TimeMetric('test time'),
+                         eb.CPUMetric('test cpu usage'),
+                         eb.LatencyMetric('test latency'),
+                         eb.ThroughputMetric('test throughput')
+                         ], bm)
+def test(model):
+
+    # num_samples = 1024
+    num_samples = 0
+    img_width, img_height, img_num_channels = 32, 32, 8
+
+    input_test, label_test = load_data(num_samples)
 
     input_test = input_test.reshape((len(input_test), img_width, img_height, img_num_channels))
 
@@ -33,16 +41,11 @@ def test(model):
 
     con_mat = confusion_matrix(label_test, pred_test)
 
-    print("Confusion Matrix: \n")
-    print(con_mat)
-
     classes = ["compact high-rise", "compact mid-rise", "compact low-rise",
                "open high-rise", "open mid-rise", "open low-rise",
                "lightweight low-rise", "large low-rise", "sparsely built",
                "heavy industry", "dense trees", "scattered tree",
                "brush, scrub", "low plants", "bare rock or paved",
                "bare soil or sand", "water"]
-
-    cmt.track(con_mat, classes, "confusion matrix")
 
     return {"confusion matrix": con_mat, "classes": classes}

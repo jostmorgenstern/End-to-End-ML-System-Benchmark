@@ -148,6 +148,7 @@ class TTATracker:
         """
         return pickle.dumps(accuracies)
 
+
 class LossTracker:
     MEASURE_TYPE = "loss"
 
