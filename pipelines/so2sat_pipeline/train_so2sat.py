@@ -8,7 +8,7 @@ from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 
 
-def load_data(num_samples=0):
+def load_data(num_samples=None):
     f = h5py.File('data/training.h5', 'r')
     n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
     input_train = f['sen1'][0:n]
@@ -18,7 +18,7 @@ def load_data(num_samples=0):
     input_val = f['sen1'][0:len(f['label'])]
     label_val = f['label'][0:len(f['label'])]
     f.close()
-    return input_train, label_train, input_val, label_val
+    return input_train, label_train, input_val, label_val, n
 
 
 def compile_model(input_shape, num_classes, loss_function, optimizer):
@@ -60,9 +60,7 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    # n = 4096
-    num_samples = 0
-    input_train, label_train, input_val, label_val = load_data(num_samples)
+    input_train, label_train, input_val, label_val, num_samples = load_data()
 
     input_train = input_train.reshape((len(input_train), img_width, img_height, img_num_channels))
     input_val = input_val.reshape((len(input_val), img_width, img_height, img_num_channels))
