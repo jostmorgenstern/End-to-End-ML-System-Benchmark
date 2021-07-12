@@ -60,7 +60,7 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    input_train, label_train, input_val, label_val, num_samples = load_data(2048)
+    input_train, label_train, input_val, label_val, num_samples = load_data()
 
     input_train = input_train.reshape((len(input_train), img_width, img_height, img_num_channels))
     input_val = input_val.reshape((len(input_val), img_width, img_height, img_num_channels))
