@@ -5,14 +5,14 @@ from benchmarking import bm
 import e2ebench as eb
 
 
-def load_data(num_samples=0):
+def load_data(num_samples=None):
     f = h5py.File('data/testing.h5', 'r')
     n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
     input_test = f['sen1'][0:n]
     label_test = f['label'][0:n]
     f.close()
 
-    return input_test, label_test, num_samples
+    return input_test, label_test, n
 
 
 latency_metric = eb.LatencyMetric('test latency')
