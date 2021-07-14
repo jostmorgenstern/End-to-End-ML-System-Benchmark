@@ -16,7 +16,7 @@ class DatasetGenerator:
         with h5py.File(self.file,  'r') as f:
             # for i in range(len(f['label'])):
             for i in range(2048):
-                yield f['sen1'][i].reshape(256, 32, 32, 8), f['label'][i]
+                yield f['sen1'][i], f['label'][i]
 
 
 
@@ -35,13 +35,13 @@ class DatasetGenerator:
 
 def load_data():
     train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
-                                              output_signature=(tf.TensorSpec(shape=(256, 32, 32, 8),
+                                              output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
                                                                               dtype=tf.float64)))
 
     validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
-                                                   output_signature=(tf.TensorSpec(shape=(256, 32, 32, 8),
+                                                   output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                                    dtype=tf.float64),
                                                                      tf.TensorSpec(shape=17,
                                                                                    dtype=tf.float64)))
@@ -80,7 +80,7 @@ latency_metric = eb.LatencyMetric('train latency')
                          ], bm)
 def train():
     per_worker_batch_size = 128
-    input_shape = (256, 32, 32, 8)
+    input_shape = (32, 32, 8)
     loss_function = "categorical_crossentropy"
     num_classes = 17
     num_epochs = 10
@@ -104,7 +104,6 @@ def train():
 
         history = model.fit(train_ds.batch(global_batch_size),
                             epochs=num_epochs,
-                            steps_per_epoch=None,
                             verbose=verbosity,
                             validation_data=val_ds)
 
