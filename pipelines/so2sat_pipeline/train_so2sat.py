@@ -80,7 +80,7 @@ latency_metric = eb.LatencyMetric('train latency')
                          ], bm)
 def train():
     per_worker_batch_size = 128
-    input_shape = (1, 32, 32, 8)
+    input_shape = (256, 32, 32, 8)
     loss_function = "categorical_crossentropy"
     num_classes = 17
     num_epochs = 10
