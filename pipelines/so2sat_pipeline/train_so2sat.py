@@ -6,6 +6,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
+import math
 
 
 class DatasetGenerator:
@@ -103,6 +104,7 @@ def train():
 
         history = model.fit(dist_train_ds,
                             epochs=num_epochs,
+                            steps_per_epoch=math.floor(352366/global_batch_size),
                             verbose=verbosity,
                             validation_data=val_ds)
 
