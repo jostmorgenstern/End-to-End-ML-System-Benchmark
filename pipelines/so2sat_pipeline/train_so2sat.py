@@ -19,17 +19,15 @@ import tensorflow as tf
 #                 yield f['sen1'][i], f['label'][i]
 
 
-
 def load_data(num_samples=None):
-    f = h5py.File('data/training.h5', 'r')
-    n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
-    input_train = f['sen1'][0:n]
-    label_train = f['label'][0:n]
-    f.close()
-    f = h5py.File('data/validation.h5', 'r')
-    input_val = f['sen1'][0:len(f['label'])]
-    label_val = f['label'][0:len(f['label'])]
-    f.close()
+    with h5py.File('data/training.h5', 'r') as f:
+        n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
+        input_train = f['sen1'][0:n]
+        label_train = f['label'][0:n]
+        f.close()
+        f = h5py.File('data/validation.h5', 'r')
+        input_val = f['sen1'][0:len(f['label'])]
+        label_val = f['label'][0:len(f['label'])]
     return input_train, label_train, input_val, label_val, n
 
 
@@ -103,8 +101,8 @@ def train():
         train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
         val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
 
-        train_ds.prefetch(3)
-        val_ds.prefetch(3)
+        # train_ds.prefetch(3)
+        # val_ds.prefetch(3)
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
