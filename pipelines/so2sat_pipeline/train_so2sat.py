@@ -99,7 +99,7 @@ def train():
 
         global_batch_size = per_worker_batch_size * num_workers
 
-        input_train, label_train, input_val, label_val, num_samples = load_data()
+        input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=32768)
         train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
         val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
 
