@@ -104,7 +104,7 @@ def train():
 
         history = model.fit(dist_train_ds,
                             epochs=num_epochs,
-                            steps_per_epoch=math.floor(352366/global_batch_size),
+                            steps_per_epoch=None,
                             verbose=verbosity,
                             validation_data=val_ds)
 
