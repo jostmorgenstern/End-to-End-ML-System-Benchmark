@@ -103,10 +103,8 @@ def train():
         train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
         val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
 
-        train_ds.prefetch(2)
-        train_ds.cache()
-        val_ds.prefetch(2)
-        val_ds.cache()
+        train_ds.prefetch(3)
+        val_ds.prefetch(3)
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
