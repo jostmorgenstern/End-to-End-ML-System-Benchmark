@@ -15,7 +15,7 @@ class DatasetGenerator:
     def __call__(self, *args, **kwargs):
         with h5py.File(self.file,  'r') as f:
             # for i in range(len(f['label'])):
-            for i in range(2048):
+            for i in range(4096):
                 yield f['sen1'][i], f['label'][i]
 
 
