@@ -16,7 +16,7 @@ class DatasetGenerator:
         with h5py.File(self.file,  'r') as f:
             # for i in range(len(f['label'])):
             for i in range(2048):
-                yield f['sen1'][i].reshape(1, 32, 32, 8), f['label'][i]
+                yield f['sen1'][i].reshape(256, 32, 32, 8), f['label'][i]
 
 
 
@@ -35,13 +35,13 @@ class DatasetGenerator:
 
 def load_data():
     train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
-                                              output_signature=(tf.TensorSpec(shape=(1, 32, 32, 8),
+                                              output_signature=(tf.TensorSpec(shape=(256, 32, 32, 8),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
                                                                               dtype=tf.float64)))
 
     validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
-                                                   output_signature=(tf.TensorSpec(shape=(1, 32, 32, 8),
+                                                   output_signature=(tf.TensorSpec(shape=(256, 32, 32, 8),
                                                                                    dtype=tf.float64),
                                                                      tf.TensorSpec(shape=17,
                                                                                    dtype=tf.float64)))
