@@ -96,7 +96,7 @@ def train():
         global_batch_size = per_worker_batch_size * strategy.num_replicas_in_sync
 
         train_ds, val_ds = load_data()
-        dist_train_ds = strategy.experimental_distribute_dataset(train_ds).batch(global_batch_size)
+        dist_train_ds = strategy.experimental_distribute_dataset(train_ds.batch(global_batch_size))
         # dist_val_ds = strategy.experimental_distribute_dataset(val_ds)
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
