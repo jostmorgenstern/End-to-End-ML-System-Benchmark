@@ -74,12 +74,12 @@ latency_metric = eb.LatencyMetric('train latency')
 
 @eb.BenchmarkSupervisor([eb.MemoryMetric('train memory'),
                          eb.TimeMetric('train time'),
-                         eb.CPUMetric('train cpu usage')
-                         # throughput_metric,
-                         # latency_metric
+                         eb.CPUMetric('train cpu usage'),
+                         throughput_metric,
+                         latency_metric
                          ], bm)
 def train():
-    per_worker_batch_size = 128
+    per_worker_batch_size = 64
     input_shape = (32, 32, 8)
     loss_function = "categorical_crossentropy"
     num_classes = 17
@@ -95,11 +95,18 @@ def train():
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
 
     with strategy.scope():
-        global_batch_size = per_worker_batch_size * strategy.num_replicas_in_sync
+        num_workers = strategy.num_replicas_in_sync
 
-        input_train, label_train, input_val, label_val, n = load_data(num_samples=4096)
+        global_batch_size = per_worker_batch_size * num_workers
+
+        input_train, label_train, input_val, label_val, num_samples = load_data()
         train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
         val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+
+        train_ds.prefetch(2)
+        train_ds.cache()
+        val_ds.prefetch(2)
+        val_ds.cache()
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
@@ -108,8 +115,8 @@ def train():
                             verbose=verbosity,
                             validation_data=val_ds)
 
-    # throughput_metric.track(num_samples / num_workers)
-    # latency_metric.track(num_samples / num_workers)
+    throughput_metric.track((num_samples / num_workers) * num_epochs)
+    latency_metric.track((num_samples / num_workers) * num_epochs)
 
     return {"model": model, "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
