@@ -19,6 +19,7 @@ class DatasetGenerator:
                 yield f['sen1'][i], f['label'][i]
 
 
+
 # def load_data(num_samples=None):
 #     f = h5py.File('data/training.h5', 'r')
 #     n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
@@ -79,7 +80,7 @@ latency_metric = eb.LatencyMetric('train latency')
                          ], bm)
 def train():
     per_worker_batch_size = 128
-    input_shape = (32, 32, 8)
+    input_shape = (1, 32, 32, 8)
     loss_function = "categorical_crossentropy"
     num_classes = 17
     num_epochs = 10
