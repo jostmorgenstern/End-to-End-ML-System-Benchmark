@@ -8,45 +8,45 @@ from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 
 
-class DatasetGenerator:
-    def __init__(self, file):
-        self.file = file
-
-    def __call__(self, *args, **kwargs):
-        with h5py.File(self.file,  'r') as f:
-            # for i in range(len(f['label'])):
-            for i in range(4096):
-                yield f['sen1'][i], f['label'][i]
-
-
-
-# def load_data(num_samples=None):
-#     f = h5py.File('data/training.h5', 'r')
-#     n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
-#     input_train = f['sen1'][0:n]
-#     label_train = f['label'][0:n]
-#     f.close()
-#     f = h5py.File('data/validation.h5', 'r')
-#     input_val = f['sen1'][0:len(f['label'])]
-#     label_val = f['label'][0:len(f['label'])]
-#     f.close()
-#     return input_train, label_train, input_val, label_val, n
+# class DatasetGenerator:
+#     def __init__(self, file):
+#         self.file = file
+#
+#     def __call__(self, *args, **kwargs):
+#         with h5py.File(self.file,  'r') as f:
+#             # for i in range(len(f['label'])):
+#             for i in range(4096):
+#                 yield f['sen1'][i], f['label'][i]
 
 
-def load_data():
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
-                                              output_signature=(tf.TensorSpec(shape=(32, 32, 8),
-                                                                              dtype=tf.float64),
-                                                                tf.TensorSpec(shape=17,
-                                                                              dtype=tf.float64)))
 
-    validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
-                                                   output_signature=(tf.TensorSpec(shape=(32, 32, 8),
-                                                                                   dtype=tf.float64),
-                                                                     tf.TensorSpec(shape=17,
-                                                                                   dtype=tf.float64)))
+def load_data(num_samples=None):
+    f = h5py.File('data/training.h5', 'r')
+    n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
+    input_train = f['sen1'][0:n]
+    label_train = f['label'][0:n]
+    f.close()
+    f = h5py.File('data/validation.h5', 'r')
+    input_val = f['sen1'][0:len(f['label'])]
+    label_val = f['label'][0:len(f['label'])]
+    f.close()
+    return input_train, label_train, input_val, label_val, n
 
-    return train_ds, validation_ds
+
+# def load_data():
+#     train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
+#                                               output_signature=(tf.TensorSpec(shape=(32, 32, 8),
+#                                                                               dtype=tf.float64),
+#                                                                 tf.TensorSpec(shape=17,
+#                                                                               dtype=tf.float64)))
+#
+#     validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
+#                                                    output_signature=(tf.TensorSpec(shape=(32, 32, 8),
+#                                                                                    dtype=tf.float64),
+#                                                                      tf.TensorSpec(shape=17,
+#                                                                                    dtype=tf.float64)))
+#
+#     return train_ds, validation_ds
 
 
 def compile_model(input_shape, num_classes, loss_function, optimizer):
@@ -97,12 +97,13 @@ def train():
     with strategy.scope():
         global_batch_size = per_worker_batch_size * strategy.num_replicas_in_sync
 
-        train_ds, val_ds = load_data()
-        # dist_val_ds = strategy.experimental_distribute_dataset(val_ds)
+        input_train, label_train, input_val, label_val, n = load_data(num_samples=4096)
+        train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
+        val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
-        history = model.fit(train_ds.batch(global_batch_size),
+        history = model.fit(train_ds,
                             epochs=num_epochs,
                             verbose=verbosity,
                             validation_data=val_ds)
