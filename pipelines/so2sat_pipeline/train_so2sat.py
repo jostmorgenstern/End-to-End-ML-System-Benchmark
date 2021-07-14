@@ -6,7 +6,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
-import math
 
 
 class DatasetGenerator:
@@ -15,7 +14,8 @@ class DatasetGenerator:
 
     def __call__(self, *args, **kwargs):
         with h5py.File(self.file,  'r') as f:
-            for i in range(len(f['label'])):
+            # for i in range(len(f['label'])):
+            for i in range(2048):
                 yield f['sen1'][i], f['label'][i]
 
 
@@ -37,13 +37,13 @@ def load_data():
                                               output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
-                                                                              dtype=tf.int8)))
+                                                                              dtype=tf.float64)))
 
     validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
                                                    output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                                    dtype=tf.float64),
                                                                      tf.TensorSpec(shape=17,
-                                                                                   dtype=tf.int8)))
+                                                                                   dtype=tf.float64)))
 
     return train_ds, validation_ds
 
