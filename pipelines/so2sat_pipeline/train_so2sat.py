@@ -33,13 +33,13 @@ class DatasetGenerator:
 
 
 def load_data():
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5'),
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
                                               output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
                                                                               dtype=tf.int8)))
 
-    validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5'),
+    validation_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
                                                    output_signature=(tf.TensorSpec(shape=(32, 32, 8),
                                                                                    dtype=tf.float64),
                                                                      tf.TensorSpec(shape=17,
