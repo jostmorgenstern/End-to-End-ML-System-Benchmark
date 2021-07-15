@@ -120,6 +120,8 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
 
     num_samples = 3  # bullshit
 
+    print(f"SAMPLE NUMBER: {len(train_ds)}")
+
     throughput_metric.track((num_samples / num_workers) * num_epochs)
     latency_metric.track((num_samples / num_workers) * num_epochs)
 
@@ -136,13 +138,10 @@ def train():
     verbosity = 1
 
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
-    # strategy = tf.distribute.get_strategy()
 
     with strategy.scope():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
                                     input_shape, num_classes, loss_function, optimizer, verbosity)
-
-    print(history.history)
 
     return {"model": model, "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
