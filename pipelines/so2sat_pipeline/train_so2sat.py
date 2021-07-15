@@ -142,7 +142,7 @@ def train():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
                                     input_shape, num_classes, loss_function, optimizer, verbosity)
 
-    print(history)
+    print(history.history)
 
     return {"model": model, "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
