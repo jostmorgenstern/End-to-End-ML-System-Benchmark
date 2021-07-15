@@ -26,15 +26,16 @@ import numpy as np
 #                 end_index += self.global_batch_size
 
 class DatasetGenerator:
-    def __init__(self, file, global_batch_size):
+    def __init__(self, file, num_samples=None):
         self.file = file
-        self.global_batch_size = global_batch_size
+        self.num_samples = num_samples
 
     def __call__(self, *args, **kwargs):
         with h5py.File(self.file, 'r') as f:
-            for i in range(len(f['label'])):
-                yield (np.concatenate((f['sen1'][i], f['sen2'][i]), axis=3).reshape((None, 32, 32, 18)),
-                       (f['label'][i]).reshape((None, 17)))
+            n = self.num_samples or len(f['label'])
+            for i in range(n):
+                yield (np.concatenate((f['sen1'][i], f['sen2'][i]), axis=2),
+                       (f['label'][i]))
 
 
 def load_data(num_samples=None):
@@ -83,25 +84,25 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
 
     global_batch_size = per_worker_batch_size * num_workers
 
-    print("\n\n\nhallühallü")
-
     # input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=128)
-    # train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
-    # val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+    # train_ds1 = tf.data.Dataset.from_tensor_slices((input_train, label_train))
+    # val_ds1 = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
     #
     # train_ds.prefetch(3)
     # val_ds.prefetch(3)
 
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
-                                              output_signature=(tf.TensorSpec(shape=(None, 32, 32, 18),
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 128),
+                                              output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                               dtype=tf.float64),
-                                                                tf.TensorSpec(shape=(None, 17),
+                                                                tf.TensorSpec(shape=17,
                                                                               dtype=tf.float64)))
+    # print(f"first from numpy: {train_ds1.batch(global_batch_size).as_numpy_iterator().next()[0].shape}")
+    # print(f"first from generator: {train_ds.batch(global_batch_size).as_numpy_iterator().next()[0].shape}")
     train_ds = train_ds.batch(global_batch_size)
-    val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
-                                            output_signature=(tf.TensorSpec(shape=(None, 32, 32, 18),
+    val_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
+                                            output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                             dtype=tf.float64),
-                                                              tf.TensorSpec(shape=(None, 17),
+                                                              tf.TensorSpec(shape=17,
                                                                             dtype=tf.float64)))
     val_ds = val_ds.batch(global_batch_size)
 
@@ -129,7 +130,8 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    strategy = tf.distribute.MirroredStrategy()
+    # strategy = tf.distribute.MirroredStrategy()
+    strategy = tf.distribute.get_strategy()
 
     with strategy.scope():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
