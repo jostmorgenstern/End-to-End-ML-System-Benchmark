@@ -6,6 +6,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
+import numpy as np
 
 
 # class DatasetGenerator:
@@ -20,14 +21,13 @@ import tensorflow as tf
 
 
 def load_data(num_samples=None):
-    with h5py.File('data/training.h5', 'r') as f:
-        n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
-        input_train = f['sen1'][0:n]
-        label_train = f['label'][0:n]
-        f.close()
-        f = h5py.File('data/validation.h5', 'r')
-        input_val = f['sen1'][0:len(f['label'])]
-        label_val = f['label'][0:len(f['label'])]
+    with h5py.File('data/training.h5', 'r') as train_f:
+        n = num_samples or len(train_f['label'])  # if num_samples is 0 or None, use all samples
+        input_train = np.concatenate((train_f['sen1'][0:n], train_f['sen2'][0:n]), axis=3)
+        label_train = train_f['label'][0:n]
+    with h5py.File('data/validation.h5', 'r') as val_f:
+        input_val = np.concatenate((val_f['sen1'][0:n], val_f['sen2'][0:n]), axis=3)
+        label_val = val_f['label'][0:len(val_f['label'])]
     return input_train, label_train, input_val, label_val, n
 
 
@@ -78,7 +78,7 @@ latency_metric = eb.LatencyMetric('train latency')
                          ], bm)
 def train():
     per_worker_batch_size = 64
-    input_shape = (32, 32, 8)
+    input_shape = (32, 32, 18)
     loss_function = "categorical_crossentropy"
     num_classes = 17
     num_epochs = 10
