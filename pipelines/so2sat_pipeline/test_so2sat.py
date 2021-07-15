@@ -3,15 +3,13 @@ from sklearn.metrics import confusion_matrix
 import numpy as np
 from benchmarking import bm
 import e2ebench as eb
-import tensorflow as tf
 
 
 def load_data(num_samples=None):
     with h5py.File('data/testing.h5', 'r') as f:
         n = num_samples or len(f['label'])  # if num_samples is 0 or None, use all samples
-        input_test = np.concatenate((f['sen1'][0:n], f['sen2'][0:n]), axis=3)
+        input_test = f['sen1'][0:n]
         label_test = f['label'][0:n]
-
     return input_test, label_test, n
 
 
@@ -27,14 +25,14 @@ throughput_metric = eb.ThroughputMetric('test throughput')
                          ], bm)
 def test(model):
 
-    img_width, img_height, img_num_channels = 32, 32, 18
+    img_width, img_height, img_num_channels = 32, 32, 8
 
     input_test, label_test, num_samples = load_data()
 
-    test_ds = tf.data.Dataset.from_tensor_slices((input_test, label_test)).batch(64)
+    input_test = input_test.reshape((len(input_test), img_width, img_height, img_num_channels))
 
     # Generate generalization metrics
-    score = model.evaluate(test_ds, verbose=0)
+    score = model.evaluate(input_test, label_test, verbose=0)
     print(f'Test loss: {score[0]} / Test accuracy: {score[1]}')
 
     # Generate confusion matrix
