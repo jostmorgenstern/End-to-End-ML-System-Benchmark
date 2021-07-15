@@ -9,21 +9,21 @@ import tensorflow as tf
 import numpy as np
 
 
-class DatasetGenerator:
-    def __init__(self, file, global_batch_size):
-        self.file = file
-        self.global_batch_size = global_batch_size
-
-    def __call__(self, *args, **kwargs):
-        with h5py.File(self.file, 'r') as f:
-            file_len = len(f['label'])
-            start_index = 0
-            end_index = self.global_batch_size - 1
-            while start_index < file_len:
-                yield (np.concatenate((f['sen1'][start_index:end_index], f['sen2'][start_index:end_index]), axis=3),
-                       f['label'][start_index:end_index])
-                start_index += self.global_batch_size
-                end_index += self.global_batch_size
+# class DatasetGenerator:
+#     def __init__(self, file, global_batch_size):
+#         self.file = file
+#         self.global_batch_size = global_batch_size
+#
+#     def __call__(self, *args, **kwargs):
+#         with h5py.File(self.file, 'r') as f:
+#             file_len = len(f['label'])
+#             start_index = 0
+#             end_index = self.global_batch_size - 1
+#             while start_index < file_len:
+#                 yield (np.concatenate((f['sen1'][start_index:end_index], f['sen2'][start_index:end_index]), axis=3),
+#                        f['label'][start_index:end_index])
+#                 start_index += self.global_batch_size
+#                 end_index += self.global_batch_size
 
 
 def load_data(num_samples=None):
@@ -75,30 +75,36 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
+    print("\n\n\n defining strategy \n\n\n")
+
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
 
+    print("\n\n\n entering scope \n\n\n")
+
     with strategy.scope():
+        print("\n\n\n entered scope \n\n\n")
+
         num_workers = strategy.num_replicas_in_sync
 
         global_batch_size = per_worker_batch_size * num_workers
 
-        # input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=32768)
-        # train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
-        # val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+        input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=32768)
+        train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
+        val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
 
-        # train_ds.prefetch(3)
-        # val_ds.prefetch(3)
+        train_ds.prefetch(3)
+        val_ds.prefetch(3)
 
-        train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
-                                                  output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-                                                                                  dtype=tf.float64),
-                                                                    tf.TensorSpec(shape=17,
-                                                                                  dtype=tf.int8)))
-        val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
-                                                output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-                                                                                dtype=tf.float64),
-                                                                  tf.TensorSpec(shape=17,
-                                                                                dtype=tf.int8)))
+        # train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
+        #                                           output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
+        #                                                                           dtype=tf.float64),
+        #                                                             tf.TensorSpec(shape=17,
+        #                                                                           dtype=tf.int8)))
+        # val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
+        #                                         output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
+        #                                                                         dtype=tf.float64),
+        #                                                           tf.TensorSpec(shape=17,
+        #                                                                         dtype=tf.int8)))
 
         model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
@@ -107,7 +113,7 @@ def train():
                             verbose=verbosity,
                             validation_data=val_ds)
 
-    num_samples = 3  # bullshit
+    # num_samples = 3  # bullshit
 
     throughput_metric.track((num_samples / num_workers) * num_epochs)
     latency_metric.track((num_samples / num_workers) * num_epochs)
