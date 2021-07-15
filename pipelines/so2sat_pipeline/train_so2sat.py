@@ -81,7 +81,7 @@ def train():
     input_shape = (32, 32, 18)
     loss_function = "categorical_crossentropy"
     num_classes = 17
-    num_epochs = 10
+    num_epochs = 1
     optimizer = Adam()
     verbosity = 1
 
