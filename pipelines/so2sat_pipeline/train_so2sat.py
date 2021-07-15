@@ -25,6 +25,17 @@ import numpy as np
 #                 start_index += self.global_batch_size
 #                 end_index += self.global_batch_size
 
+class DatasetGenerator:
+    def __init__(self, file, global_batch_size):
+        self.file = file
+        self.global_batch_size = global_batch_size
+
+    def __call__(self, *args, **kwargs):
+        with h5py.File(self.file, 'r') as f:
+            for i in range(len(f['label'])):
+                yield (np.concatenate((f['sen1'][i], f['sen2'][i]), axis=3).reshape((None, 32, 32, 18)),
+                       (f['label'][i]).reshape((None, 17)))
+
 
 def load_data(num_samples=None):
     with h5py.File('data/training.h5', 'r') as train_f:
@@ -68,29 +79,31 @@ latency_metric = eb.LatencyMetric('train latency')
                          ], bm)
 def scope_func(strategy, per_worker_batch_size, num_epochs,
                input_shape, num_classes, loss_function, optimizer, verbosity):
-    print("\n\n\n entered scope \n\n\n")
-
     num_workers = strategy.num_replicas_in_sync
 
     global_batch_size = per_worker_batch_size * num_workers
 
-    input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=None)
-    train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
-    val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+    print("\n\n\nhallühallü")
 
-    train_ds.prefetch(3)
-    val_ds.prefetch(3)
+    # input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=128)
+    # train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
+    # val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+    #
+    # train_ds.prefetch(3)
+    # val_ds.prefetch(3)
 
-    # train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
-    #                                           output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-    #                                                                           dtype=tf.float64),
-    #                                                             tf.TensorSpec(shape=17,
-    #                                                                           dtype=tf.int8)))
-    # val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
-    #                                         output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-    #                                                                         dtype=tf.float64),
-    #                                                           tf.TensorSpec(shape=17,
-    #                                                                         dtype=tf.int8)))
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
+                                              output_signature=(tf.TensorSpec(shape=(None, 32, 32, 18),
+                                                                              dtype=tf.float64),
+                                                                tf.TensorSpec(shape=(None, 17),
+                                                                              dtype=tf.float64)))
+    train_ds = train_ds.batch(global_batch_size)
+    val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
+                                            output_signature=(tf.TensorSpec(shape=(None, 32, 32, 18),
+                                                                            dtype=tf.float64),
+                                                              tf.TensorSpec(shape=(None, 17),
+                                                                            dtype=tf.float64)))
+    val_ds = val_ds.batch(global_batch_size)
 
     model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
@@ -99,7 +112,7 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
                         verbose=verbosity,
                         validation_data=val_ds)
 
-    # num_samples = 3  # bullshit
+    num_samples = 3  # bullshit
 
     throughput_metric.track((num_samples / num_workers) * num_epochs)
     latency_metric.track((num_samples / num_workers) * num_epochs)
@@ -116,11 +129,7 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    print("\n\n\n defining strategy \n\n\n")
-
-    strategy = tf.distribute.MultiWorkerMirroredStrategy()
-
-    print("\n\n\n entering scope \n\n\n")
+    strategy = tf.distribute.MirroredStrategy()
 
     with strategy.scope():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
