@@ -130,7 +130,7 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    strategy = tf.distribute.MirroredStrategy()
+    strategy = tf.distribute.MultiWorkerMirroredStrategy()
     # strategy = tf.distribute.get_strategy()
 
     with strategy.scope():
