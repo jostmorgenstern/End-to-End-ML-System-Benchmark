@@ -130,8 +130,8 @@ def train():
     optimizer = Adam()
     verbosity = 1
 
-    # strategy = tf.distribute.MirroredStrategy()
-    strategy = tf.distribute.get_strategy()
+    strategy = tf.distribute.MirroredStrategy()
+    # strategy = tf.distribute.get_strategy()
 
     with strategy.scope():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
