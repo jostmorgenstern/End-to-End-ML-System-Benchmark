@@ -90,12 +90,12 @@ def train():
         # val_ds.prefetch(3)
 
         train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
-                                                  output_signature=(tf.TensorSpec(shape=(32, 32, 18),
+                                                  output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
                                                                                   dtype=tf.float64),
                                                                     tf.TensorSpec(shape=17,
                                                                                   dtype=tf.int8)))
         val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
-                                                output_signature=(tf.TensorSpec(shape=(32, 32, 18),
+                                                output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
                                                                                 dtype=tf.float64),
                                                                   tf.TensorSpec(shape=17,
                                                                                 dtype=tf.int8)))
