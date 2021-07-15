@@ -93,7 +93,7 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
     options = tf.data.Options()
     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 256),
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 1337),
                                               output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
@@ -131,7 +131,7 @@ def train():
     input_shape = (32, 32, 18)
     loss_function = "categorical_crossentropy"
     num_classes = 17
-    num_epochs = 10
+    num_epochs = 1
     optimizer = Adam()
     verbosity = 1
 
@@ -141,6 +141,8 @@ def train():
     with strategy.scope():
         model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
                                     input_shape, num_classes, loss_function, optimizer, verbosity)
+
+    print(history)
 
     return {"model": model, "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
