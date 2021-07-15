@@ -93,7 +93,7 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
     options = tf.data.Options()
     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 100000),
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5'),
                                               output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
@@ -108,8 +108,8 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
                                                                             dtype=tf.float64)))
     val_ds = val_ds.with_options(options).batch(global_batch_size)
 
-    train_ds.prefetch(10)
-    val_ds.prefetch(10)
+    train_ds.prefetch(30)
+    val_ds.prefetch(30)
 
     model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
