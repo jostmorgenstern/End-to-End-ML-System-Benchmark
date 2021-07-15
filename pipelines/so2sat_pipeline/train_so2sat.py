@@ -66,6 +66,47 @@ latency_metric = eb.LatencyMetric('train latency')
                          throughput_metric,
                          latency_metric
                          ], bm)
+def scope_func(strategy, per_worker_batch_size, num_epochs,
+               input_shape, num_classes, loss_function, optimizer, verbosity):
+    print("\n\n\n entered scope \n\n\n")
+
+    num_workers = strategy.num_replicas_in_sync
+
+    global_batch_size = per_worker_batch_size * num_workers
+
+    input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=None)
+    train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
+    val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
+
+    train_ds.prefetch(3)
+    val_ds.prefetch(3)
+
+    # train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
+    #                                           output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
+    #                                                                           dtype=tf.float64),
+    #                                                             tf.TensorSpec(shape=17,
+    #                                                                           dtype=tf.int8)))
+    # val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
+    #                                         output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
+    #                                                                         dtype=tf.float64),
+    #                                                           tf.TensorSpec(shape=17,
+    #                                                                         dtype=tf.int8)))
+
+    model = compile_model(input_shape, num_classes, loss_function, optimizer)
+
+    history = model.fit(train_ds,
+                        epochs=num_epochs,
+                        verbose=verbosity,
+                        validation_data=val_ds)
+
+    # num_samples = 3  # bullshit
+
+    throughput_metric.track((num_samples / num_workers) * num_epochs)
+    latency_metric.track((num_samples / num_workers) * num_epochs)
+
+    return model, history
+
+
 def train():
     per_worker_batch_size = 64
     input_shape = (32, 32, 18)
@@ -82,41 +123,8 @@ def train():
     print("\n\n\n entering scope \n\n\n")
 
     with strategy.scope():
-        print("\n\n\n entered scope \n\n\n")
-
-        num_workers = strategy.num_replicas_in_sync
-
-        global_batch_size = per_worker_batch_size * num_workers
-
-        input_train, label_train, input_val, label_val, num_samples = load_data(num_samples=32768)
-        train_ds = tf.data.Dataset.from_tensor_slices((input_train, label_train)).batch(global_batch_size)
-        val_ds = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
-
-        train_ds.prefetch(3)
-        val_ds.prefetch(3)
-
-        # train_ds = tf.data.Dataset.from_generator(DatasetGenerator('training.h5', global_batch_size),
-        #                                           output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-        #                                                                           dtype=tf.float64),
-        #                                                             tf.TensorSpec(shape=17,
-        #                                                                           dtype=tf.int8)))
-        # val_ds = tf.data.Dataset.from_generator(DatasetGenerator('validation.h5', global_batch_size),
-        #                                         output_signature=(tf.TensorSpec(shape=(global_batch_size, 32, 32, 18),
-        #                                                                         dtype=tf.float64),
-        #                                                           tf.TensorSpec(shape=17,
-        #                                                                         dtype=tf.int8)))
-
-        model = compile_model(input_shape, num_classes, loss_function, optimizer)
-
-        history = model.fit(train_ds,
-                            epochs=num_epochs,
-                            verbose=verbosity,
-                            validation_data=val_ds)
-
-    # num_samples = 3  # bullshit
-
-    throughput_metric.track((num_samples / num_workers) * num_epochs)
-    latency_metric.track((num_samples / num_workers) * num_epochs)
+        model, history = scope_func(strategy, per_worker_batch_size, num_epochs,
+                                    input_shape, num_classes, loss_function, optimizer, verbosity)
 
     return {"model": model, "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
