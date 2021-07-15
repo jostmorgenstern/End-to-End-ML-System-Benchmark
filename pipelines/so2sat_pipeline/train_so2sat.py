@@ -9,6 +9,7 @@ import tensorflow as tf
 import numpy as np
 
 
+
 # class DatasetGenerator:
 #     def __init__(self, file, global_batch_size):
 #         self.file = file
@@ -88,23 +89,27 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
     # train_ds1 = tf.data.Dataset.from_tensor_slices((input_train, label_train))
     # val_ds1 = tf.data.Dataset.from_tensor_slices((input_val, label_val)).batch(global_batch_size)
     #
-    # train_ds.prefetch(3)
-    # val_ds.prefetch(3)
 
-    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 128),
+    options = tf.data.Options()
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+
+    train_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/training.h5', 8192),
                                               output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                               dtype=tf.float64),
                                                                 tf.TensorSpec(shape=17,
                                                                               dtype=tf.float64)))
     # print(f"first from numpy: {train_ds1.batch(global_batch_size).as_numpy_iterator().next()[0].shape}")
     # print(f"first from generator: {train_ds.batch(global_batch_size).as_numpy_iterator().next()[0].shape}")
-    train_ds = train_ds.batch(global_batch_size)
+    train_ds = train_ds.with_options(options).batch(global_batch_size)
     val_ds = tf.data.Dataset.from_generator(DatasetGenerator('data/validation.h5'),
                                             output_signature=(tf.TensorSpec(shape=(32, 32, 18),
                                                                             dtype=tf.float64),
                                                               tf.TensorSpec(shape=17,
                                                                             dtype=tf.float64)))
-    val_ds = val_ds.batch(global_batch_size)
+    val_ds = val_ds.with_options(options).batch(global_batch_size)
+
+    train_ds.prefetch(10)
+    val_ds.prefetch(10)
 
     model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
