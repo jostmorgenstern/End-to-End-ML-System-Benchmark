@@ -26,9 +26,6 @@ throughput_metric = eb.ThroughputMetric('test throughput')
                          throughput_metric
                          ], bm)
 def test(model):
-
-    img_width, img_height, img_num_channels = 32, 32, 18
-
     input_test, label_test, num_samples = load_data()
 
     test_ds = tf.data.Dataset.from_tensor_slices((input_test, label_test)).batch(64)
