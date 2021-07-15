@@ -120,7 +120,7 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
 
     num_samples = 3  # bullshit
 
-    print(f"SAMPLE NUMBER: {len(train_ds)}")
+    print(f"SAMPLE NUMBER: {tf.data.experimental.cardinality(train_ds)}")
 
     throughput_metric.track((num_samples / num_workers) * num_epochs)
     latency_metric.track((num_samples / num_workers) * num_epochs)
