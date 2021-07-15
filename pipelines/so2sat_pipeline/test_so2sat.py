@@ -31,7 +31,7 @@ def test(model):
 
     input_test, label_test, num_samples = load_data()
 
-    test_ds = tf.data.Dataset.from_tensor_slices((input_test, label_test))
+    test_ds = tf.data.Dataset.from_tensor_slices((input_test, label_test)).batch(64)
 
     # Generate generalization metrics
     score = model.evaluate(test_ds, verbose=0)
