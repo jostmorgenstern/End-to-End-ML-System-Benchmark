@@ -12,15 +12,15 @@ def generate_config(nodes):
     generate_tfconfig(nodes[0], 0, nodes, folderpath)
 
     for i in range(1, len(nodes)):
-        generate_umlautconfig('main', nodes[i], i, folderpath)
+        generate_umlautconfig('worker', nodes[i], i, folderpath, main_node=nodes[0])
         generate_shellscript(nodes[i], foldername, folderpath)
         generate_tfconfig(nodes[i], i, nodes, folderpath)
 
 
-def generate_umlautconfig(role, node, worker_number, folderpath):
+def generate_umlautconfig(role, node, worker_number, folderpath, main_node=None):
     umlautconfig = f"""{{
   "role": "{role}",
-  "main_address": "node-{node}.delab.i.hpi.de",
+  "main_address": "node-{main_node or node}.delab.i.hpi.de",
   "main_port": 35353,
   "worker_number": {worker_number}
 }}"""
