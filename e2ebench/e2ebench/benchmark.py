@@ -235,21 +235,20 @@ class DistributedBenchmark:
 
 class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, benchmark, *args):
-        super().__init__(*args)
         self.benchmark = benchmark
+        super().__init__(*args)
 
     def do_POST(self):
-        data = None
         try:
-            data = self.rfile.read()
+            length = int(self.headers['content-length'])
+            data = self.rfile.read(length)
             data = pickle.loads(data)
-        except pickle.PickleError:
-            self.send_error(400, message="Could not decode data")
-        try:
             self.benchmark.log(**data)
-        except sqlalchemy.exc.SQLAlchemyError:
-            self.send_error(500, message="Data received but server could not log it")
-        self.send_response(200)
+            self.send_response(200)
+        except Exception:
+            self.send_error(500, message="Data recieved but server could not log it")
+        finally:
+            self.end_headers()
 
 
 class ThreadedTCPServer(socketserver.TCPServer, socketserver.ThreadingMixIn):
@@ -286,24 +285,23 @@ class DistributedBenchmarkMain(Benchmark):
 
 class DistributedBenchmarkWorker:
     def __init__(self, main_host, worker_number):
-        self.main_host = main_host
+        self.url = f"http://{main_host[0]}:{main_host[1]}"
         self.worker_number = worker_number
+        print(f"UMLAUT: Started worker with number {self.worker_number}")
 
     def log(self, description, measure_type, value, unit=''):
         measurement = {
-            "measurement_datetime": datetime.now(),
-            "measurement_description": description,
-            "measurement_type": measure_type,
-            "measurement_data": value,
-            "measurement_unit": unit,
+            "description": description,
+            "measure_type": measure_type,
+            "value": value,
+            "unit": unit,
             "worker_number": self.worker_number
         }
-        r.post(url=self.main_host, data=pickle.dumps(measurement))
+        r.post(url=self.url, data=pickle.dumps(measurement))
 
     def close(self):
         pass
 
     def query(self):
         pass
-
 
