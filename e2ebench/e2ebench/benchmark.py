@@ -226,8 +226,10 @@ class DistributedBenchmark:
         main_host = (config['main_address'], config['main_port'])
 
         if config['role'] == 'main':
+            print(f"\n\n\n THIS IS THE MAIN NODE \n\n\n")
             return DistributedBenchmarkMain(main_host, db_file, description, mode)
         else:
+            print(f"\n\n\n THIS IS A WORKER NODE \n\n\n")
             return DistributedBenchmarkWorker(main_host, config['worker_number'])
 
 
