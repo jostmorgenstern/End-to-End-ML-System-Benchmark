@@ -74,8 +74,10 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
                                                                             dtype=tf.float64)))
     val_ds = val_ds.with_options(options).batch(global_batch_size)
 
-    train_ds.prefetch(30)
-    val_ds.prefetch(30)
+    train_ds.prefetch(10)
+    train_ds.cache()
+    val_ds.prefetch(10)
+    train_ds.cache()
 
     model = compile_model(input_shape, num_classes, loss_function, optimizer)
 
@@ -98,7 +100,7 @@ def train():
     input_shape = (32, 32, 18)
     loss_function = "categorical_crossentropy"
     num_classes = 17
-    num_epochs = 1
+    num_epochs = 4
     optimizer = Adam()
     verbosity = 1
 
