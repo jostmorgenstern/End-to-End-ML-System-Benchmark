@@ -203,7 +203,9 @@ class DistributedBenchmark:
     def __new__(cls, db_file, description="", mode="a"):
         distributed_config = os.getenv("UMLAUT_CONFIG")
         if not distributed_config:
-            return False
+            raise ValueError(
+                "Could not find UMLAUT_CONFIG environment variable"
+            )
         try:
             config_dict = json.loads(distributed_config)
         except json.JSONDecodeError:
@@ -234,7 +236,7 @@ class DistributedLoggingRequestHandler(BaseHTTPRequestHandler):
         super().__init__(*args)
         self.benchmark = benchmark
 
-    def do_PUT(self):
+    def do_POST(self):
         data = None
         try:
             data = self.rfile.read()
