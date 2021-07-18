@@ -55,7 +55,7 @@ def generate_tfconfig(node, index, nodes, folderpath):
 
 
 if __name__ == "__main__":
-    names = ["12", "11", "10", "09", "08", "07", "06", "05"]
+    names = ["12", "11", "10","06", "05", "04"]
     nodes_lists = []
 
     for i in range(len(names)):
