@@ -1,0 +1,9 @@
+{
+  "cluster": {
+    "worker": ["node-12.delab.i.hpi.de:25252", "node-11.delab.i.hpi.de:25252", "node-10.delab.i.hpi.de:25252", "node-05.delab.i.hpi.de:25252"]
+  },
+  "task": {
+    "type": "worker",
+    "index": 1
+  }
+}
