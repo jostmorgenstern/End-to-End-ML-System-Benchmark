@@ -99,7 +99,7 @@ def train():
     loss_function = "categorical_crossentropy"
     num_classes = 17
     num_epochs = 5
-    optimizer = Adam(learning_rate=0.001)
+    optimizer = Adam(learning_rate=0.0005)
     verbosity = 1
 
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
