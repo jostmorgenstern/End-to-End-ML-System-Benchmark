@@ -45,9 +45,9 @@ throughput_metric = eb.ThroughputMetric('train throughput')
 latency_metric = eb.LatencyMetric('train latency')
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('train memory'),
+@eb.BenchmarkSupervisor([eb.MemoryMetric('train memory', interval=4),
                          eb.TimeMetric('train time'),
-                         eb.CPUMetric('train cpu usage'),
+                         eb.CPUMetric('train cpu usage', interval=4),
                          throughput_metric,
                          latency_metric
                          ], bm)
@@ -94,12 +94,12 @@ def scope_func(strategy, per_worker_batch_size, num_epochs,
 
 
 def train():
-    per_worker_batch_size = 256
+    per_worker_batch_size = 512
     input_shape = (32, 32, 18)
     loss_function = "categorical_crossentropy"
     num_classes = 17
-    num_epochs = 4
-    optimizer = Adam(learning_rate=0.01)
+    num_epochs = 5
+    optimizer = Adam(learning_rate=0.05)
     verbosity = 1
 
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
