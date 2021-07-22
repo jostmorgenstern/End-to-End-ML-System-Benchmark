@@ -2,7 +2,7 @@ import unittest
 import e2ebench
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, asc
-from e2ebench.e2ebench.datamodel import Measurement
+from e2ebench.datamodel import Measurement
 import pandas as pd
 import time
 import os
@@ -31,7 +31,7 @@ def get_database_df(measurement):
                                   Measurement.value,
                                   Measurement.unit)
 
-    #measure_query = measure_query.filter_by(measurement_type=measurement)
+    # measure_query = measure_query.filter_by(measurement_type=measurement)
     values = pd.DataFrame(measure_query.all())
     print(values)
     return values

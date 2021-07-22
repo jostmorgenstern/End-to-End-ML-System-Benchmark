@@ -5,13 +5,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 import sys
-import e2ebench
+import e2ebench as eb
 from benchmarking import bm
 
 
-@e2ebench.MeasureTime(bm, description="time spent on preparing data")
-@e2ebench.MeasureMemorySamples(bm, description="memory usage of data preparation")
+# @e2ebench.MeasureTime(bm, description="time spent on preparing data")
+# @e2ebench.MeasureMemorySamples(bm, description="memory usage of data preparation")
 # @pkg.MeasureMemoryTracemalloc(bm, description="memory usage of data preparation")
+
+@eb.BenchmarkSupervisor([eb.MemoryMetric('prep memory'), eb.TimeMetric('prep time')], bm)
 def data_preparation():
 
     # number of subprocesses to use for data loading

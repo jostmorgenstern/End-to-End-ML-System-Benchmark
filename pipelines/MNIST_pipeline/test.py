@@ -3,14 +3,16 @@ import numpy as np
 import torch.nn as nn
 import os
 import sys
-import e2ebench
+import e2ebench as eb
 from benchmarking import bm
 
 
-@e2ebench.MeasureTime(bm, description="Testing time")
+# @e2ebench.MeasureTime(bm, description="Testing time")
 # @pkg.MeasureMulticlassConfusion(bm, description="Testing/Validation results")
-@e2ebench.MeasureMemorySamples(bm, description="Testing memory usage")
+# @e2ebench.MeasureMemorySamples(bm, description="Testing memory usage")
 # @pkg.MeasureMemoryTracemalloc(bm, description="Testing memory usage")
+
+@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'), eb.TimeMetric('test time'), eb.PowerMetric('MNIST test power')], bm)
 def test(model, testloader):
 
     criterion = nn.NLLLoss()

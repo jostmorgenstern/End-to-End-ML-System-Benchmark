@@ -17,7 +17,6 @@ thr = ThroughputMetric('stock market throughput')
 tta = TTATracker(bm)
 
 @BenchmarkSupervisor([TimeMetric('stock market time'), MemoryMetric('stock market memory', interval=0.1),
-                      PowerMetric('stock market power'), EnergyMetric('stock market energy'),
                       lat, thr], bm)
 def train(model, X_train, y_train, batch_size=32, epochs=10, lr=0.01):
 

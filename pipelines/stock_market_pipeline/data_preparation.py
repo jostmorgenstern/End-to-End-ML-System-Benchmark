@@ -9,7 +9,7 @@ import e2ebench as eb
 from benchmarking import bm
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('prep memory'), eb.TimeMetric('prep time'), eb.PowerMetric('prep power')], bm)
+@eb.BenchmarkSupervisor([eb.MemoryMetric('prep memory'), eb.TimeMetric('prep time')], bm)
 def prepare_data():
 
     # download a CSV of your choice on yahoo finance

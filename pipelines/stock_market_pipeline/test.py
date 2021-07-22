@@ -7,7 +7,7 @@ import e2ebench as eb
 from benchmarking import bm
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'), eb.TimeMetric('test time'), eb.PowerMetric('test power')], bm)
+@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'), eb.TimeMetric('test time')], bm)
 def test(df, model, sc):
 
     # Getting the predicted stock price of 2017

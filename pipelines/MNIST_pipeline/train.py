@@ -4,14 +4,22 @@ import os
 import sys
 import e2ebench
 from benchmarking import bm
+from e2ebench import Benchmark, ConfusionMatrixTracker, HyperparameterTracker, BenchmarkSupervisor, TimeMetric, \
+    MemoryMetric, PowerMetric, EnergyMetric, LatencyMetric, ThroughputMetric, TTATracker
 
-@e2ebench.MeasureTime(bm, description="Training time")
-@e2ebench.MeasureThroughput(bm, description="Training throughput")
-@e2ebench.MeasureLatency(bm, description="Training latency")
-@e2ebench.MeasureMemorySamples(bm, description="Training memory usage")
+# @e2ebench.MeasureTime(bm, description="Training time")
+# @e2ebench.MeasureThroughput(bm, description="Training throughput")
+# @e2ebench.MeasureLatency(bm, description="Training latency")
+# @e2ebench.MeasureMemorySamples(bm, description="Training memory usage")
 # @pkg.MeasureMemoryTracemalloc(bm, description="Training memory usage")
-def train(model, trainloader):
 
+lat = LatencyMetric('MNIST latency')
+thr = ThroughputMetric('MNIST throughput')
+tta = TTATracker(bm)
+
+
+@BenchmarkSupervisor([TimeMetric('MNIST time'), MemoryMetric('MNIST memory', interval=0.1), lat, thr], bm)
+def train(model, trainloader):
     n_epochs = 10  # suggest training between 20-50 epochs
 
     criterion = nn.NLLLoss()
@@ -47,5 +55,8 @@ def train(model, trainloader):
             epoch + 1,
             train_loss
         ))
+
+    lat.track(num_entries=len(trainloader))
+    thr.track(num_entries=len(trainloader))
 
     return {"model": model, "num_entries": len(trainloader)}
