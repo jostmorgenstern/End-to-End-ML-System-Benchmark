@@ -6,9 +6,12 @@ import sys
 import e2ebench
 from benchmarking import bm
 import e2ebench as eb
+from e2ebench import LatencyMetric, ThroughputMetric, TTATracker, ConfusionMatrixTracker
 
+lat = LatencyMetric('Testing Latency')
+thr = ThroughputMetric('Testing Throughput')
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('test memory'), eb.TimeMetric('test time')], bm)
+@eb.BenchmarkSupervisor([eb.TimeMetric('SO2SAT Time'), lat, thr], bm)
 def test(model):
     cmt = eb.ConfusionMatrixTracker(bm)
 
@@ -44,5 +47,8 @@ def test(model):
                "bare soil or sand", "water"]
 
     cmt.track(con_mat, classes, "confusion matrix")
+
+    lat.track(len(input_test))
+    thr.track(len(input_test))
 
     return {"confusion matrix": con_mat, "classes": classes}

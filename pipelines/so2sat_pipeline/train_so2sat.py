@@ -1,7 +1,8 @@
 import h5py
 import e2ebench as eb
 from benchmarking import bm
-
+from e2ebench import LatencyMetric, ThroughputMetric, TTATracker, ConfusionMatrixTracker, CPUMetric, \
+    HyperparameterTracker
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras.optimizers import Adam
@@ -40,7 +41,11 @@ def compile_model(input_shape, num_classes, loss_function, optimizer):
     return model
 
 
-@eb.BenchmarkSupervisor([eb.MemoryMetric('train memory'), eb.TimeMetric('train time')], bm)
+lat = LatencyMetric('Training Latency')
+thr = ThroughputMetric('Training Throughput')
+tta = TTATracker(bm)
+
+@eb.BenchmarkSupervisor([eb.TimeMetric('SO2SAT Time'), lat, thr], bm)
 def train():
     batch_size = 256
     img_width, img_height, img_num_channels = 32, 32, 8
@@ -73,5 +78,10 @@ def train():
     #         "accuracy": history.history["accuracy"][-1]}
 
     # single run version
+
+    lat.track(num_entries=len(input_train))
+    thr.track(num_entries=len(input_train))
+    tta.track(accuracies=history.history["accuracy"], description="Training TTA")
+
     return {"model": model, "num_entries": len(input_train), "classifier": optimizer,
             "accuracy": history.history["accuracy"]}
